@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com-idsmartscanner-plugins-scan" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>IDSmartScanner</name>
+    <description>IDSmart Scanner Cordova Plugin</description>
+    <keywords>cordova,IDSmart,Scanner</keywords>
+    <js-module name="IDSmartScanner" src="www/IDSmartScanner.js">
+        <clobbers target="idsmartscanner" />
+    </js-module>
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="IDSmartScanner">
+                <param name="ios-package" value="IDSmartScanner" />
+            </feature>
+        </config-file>
+        <header-file src="src/ios/IDSmartScanner.h" />
+        <source-file src="src/ios/IDSmartScanner.m" />
+    </platform>
+
+</plugin>

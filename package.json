@@ -1,0 +1,20 @@
+{
+  "name": "idsmartscanner",
+  "version": "0.0.1",
+  "description": "IDSmart Scanner Cordova Plugin",
+  "cordova": {
+    "id": "com-idsmartscanner-plugins-scan",
+    "platforms": [
+      "ios"
+    ]
+  },
+  "keywords": [
+    "cordova",
+    "IDSmart",
+    "Scanner",
+    "ecosystem:cordova",
+    "cordova-ios"
+  ],
+  "author": "",
+  "license": "ISC"
+}
