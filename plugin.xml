@@ -14,6 +14,9 @@
         </config-file>
         <header-file src="src/ios/IDSmartScanner.h" />
         <source-file src="src/ios/IDSmartScanner.m" />
+        
+        <framework src="src/ios/IDSmart.framework" custom="true" embed="true"/>
+
     </platform>
 
 </plugin>
