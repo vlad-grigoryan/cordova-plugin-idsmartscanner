@@ -2,6 +2,8 @@
 <plugin id="com-idsmartscanner-plugins-scan" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>IDSmartScanner</name>
     <description>IDSmart Scanner Cordova Plugin</description>
+    <repo>https://github.com/ScientificDimension/cordova-plugin-idsmartscanner</repo>
+    <issue>https://github.com/ScientificDimension/cordova-plugin-idsmartscanner/issues</issue>
     <keywords>cordova,IDSmart,Scanner</keywords>
     <js-module name="IDSmartScanner" src="www/IDSmartScanner.js">
         <clobbers target="idsmartscanner" />

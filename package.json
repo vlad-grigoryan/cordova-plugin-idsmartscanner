@@ -1,20 +1,28 @@
 {
-  "name": "idsmartscanner",
-  "version": "0.0.1",
-  "description": "IDSmart Scanner Cordova Plugin",
-  "cordova": {
-    "id": "com-idsmartscanner-plugins-scan",
-    "platforms": [
-      "ios"
-    ]
-  },
-  "keywords": [
-    "cordova",
-    "IDSmart",
-    "Scanner",
-    "ecosystem:cordova",
-    "cordova-ios"
-  ],
-  "author": "",
-  "license": "ISC"
+    "name": "idsmartscanner",
+    "version": "0.0.1",
+    "description": "IDSmart Scanner Cordova Plugin",
+    "cordova": {
+        "id": "com-idsmartscanner-plugins-scan",
+        "platforms": [
+                      "ios"
+                      ]
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ScientificDimension/cordova-plugin-idsmartscanner.git"
+    },
+    "keywords": [
+                 "cordova",
+                 "IDSmart",
+                 "Scanner",
+                 "ecosystem:cordova",
+                 "cordova-ios"
+                 ],
+    "author": "ScientificDimension",
+    "license": "ISC"
+    "bugs": {
+        "url": "https://github.com/ScientificDimension/cordova-plugin-idsmartscanner/issues"
+    },
+    "homepage": "https://github.com/ScientificDimension/cordova-plugin-idsmartscanner#readme"
 }
