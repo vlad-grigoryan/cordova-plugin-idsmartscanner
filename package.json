@@ -20,7 +20,7 @@
                  "cordova-ios"
                  ],
     "author": "ScientificDimension",
-    "license": "ISC"
+    "license": "ISC",
     "bugs": {
         "url": "https://github.com/ScientificDimension/cordova-plugin-idsmartscanner/issues"
     },
