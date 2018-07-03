@@ -154,3 +154,6 @@ On `failure` and on `success` plugin returns the same object `scanningResut` whi
     "detailError": "<null>"
 }
 ```
+## Plugin Screenshot
+
+![screen shot 2018-07-03 at 17 29 27](https://user-images.githubusercontent.com/27812408/42226482-bb65da40-7ee7-11e8-94a6-1f3b8f67cf7d.png)
