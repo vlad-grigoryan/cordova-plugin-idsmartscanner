@@ -2,10 +2,10 @@
 ================================
 
 For developing plugin those repositories were used as examples:
-https://github.com/dynamsoft-dbr/cordova-plugin-dbr
-https://github.com/ModusCreateOrg/cordova-plugin-example
+* https://github.com/dynamsoft-dbr/cordova-plugin-dbr
+* https://github.com/ModusCreateOrg/cordova-plugin-example
 
-The plugin is based on third party custom framework provider by [IDScan Biometrics Ltd.](https://www.idscan.com/).
+The plugin is based on third party custom framework provider by [IDScan Biometrics Ltd](https://www.idscan.com/).
 
 ## Installation
 1. Install **Cordova** via **npm**:
