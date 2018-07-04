@@ -14,6 +14,16 @@
                 <param name="ios-package" value="IDSmartScanner" />
             </feature>
         </config-file>
+        
+        <!-- https://stackoverflow.com/questions/39566952/cordova-info-plist-nscamerausagedescription-key-is-missing -->
+        <edit-config target="NSCameraUsageDescription" file="*-Info.plist" mode="merge">
+            <string>This app needs access to the camera to scan</string>
+        </edit-config>
+        
+        <edit-config target="NSPhotoLibraryUsageDescription" file="*-Info.plist" mode="merge">
+            <string>This app needs access to the photo library to pick document images</string>
+        </edit-config>
+        
         <header-file src="src/ios/IDSmartScanner.h" />
         <source-file src="src/ios/IDSmartScanner.m" />
         
