@@ -374,12 +374,13 @@ static NSString *const kPasswordKey = @"password";
         // Get journey results
         [IDSEnterpriseService getDetails:enterpriseResponse.scanReference overrideUsername:_username overridePassword:_password overrideUrlPrefix:_urlPrefix progress:nil
                               completion:^(IDSEnterpriseDetailResponse * _Nullable detailResponse, NSError * _Nullable error) {
-                                  [alertController dismissViewControllerAnimated:YES completion:nil];
-                                  if (error) {
-                                      [self handleDetailError:error];
-                                  } else {
-                                      [self handleDetailResponse:detailResponse];
-                                  }
+                                  [alertController dismissViewControllerAnimated:YES completion:^{
+                                      if (error) {
+                                          [self handleDetailError:error];
+                                      } else {
+                                          [self handleDetailResponse:detailResponse];
+                                      }
+                                  }];
                               }];
     }];
 }
@@ -393,12 +394,11 @@ static NSString *const kPasswordKey = @"password";
     _detailResponseError = error;
     
     UIAlertController *controller = [UIAlertController alertControllerWithTitle:nil message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *closeAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *closeAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action){
+        [self returnScanningResultWithError:NO];
+    }];
     [controller addAction:closeAction];
     [self.viewController presentViewController:controller animated:YES completion:nil];
-    
-    
-    [self returnScanningResultWithError:NO];
 }
 
 
