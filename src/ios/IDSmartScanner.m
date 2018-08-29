@@ -1,7 +1,7 @@
 /* IDSmartScanner.m */
 
+#import <objc/runtime.h>
 #import "IDSmartScanner.h"
-#import <Cordova/CDV.h>
 @import IDSmart;
 
 typedef NS_ENUM(NSInteger, ScanningPhase) {
@@ -372,7 +372,7 @@ static NSString *const kPasswordKey = @"password";
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Loading.." message:@"" preferredStyle:UIAlertControllerStyleAlert];
     [self.viewController presentViewController:alertController animated:YES completion:^{
         // Get journey results
-        [IDSEnterpriseService getDetails:enterpriseResponse.scanReference overrideUsername:_username overridePassword:_password overrideUrlPrefix:_urlPrefix progress:nil
+        [IDSEnterpriseService getDetails:enterpriseResponse.scanReference overrideUsername:self.username overridePassword:self.password overrideUrlPrefix:self.urlPrefix progress:nil
                               completion:^(IDSEnterpriseDetailResponse * _Nullable detailResponse, NSError * _Nullable error) {
                                   [alertController dismissViewControllerAnimated:YES completion:^{
                                       if (error) {
@@ -427,7 +427,7 @@ static NSString *const kPasswordKey = @"password";
     
     [picker dismissViewControllerAnimated:YES
                                completion:^{
-                                   if (_scanningPhase == ScanningPhaseAddressDocument) {
+                                   if (self.scanningPhase == ScanningPhaseAddressDocument) {
                                        IDSDocumentScannerController *controller = [self scannerControllerWithOptions:@{IDSDocumentScannerOptionImage:image}];
                                        [self.viewController presentViewController:controller animated:YES completion:nil];
                                    } else {
@@ -459,8 +459,8 @@ static NSString *const kPasswordKey = @"password";
 
 - (void)documentScannerControllerDidCancel:(IDSDocumentScannerController *)scanner {
     [scanner dismissViewControllerAnimated:YES completion:^{
-        if ([_lastDocumentScanResponse.requiredAction isEqualToString:kIDSEnterpriseRequiredActionSecondScan] ||
-            [_lastDocumentScanResponse.requiredAction isEqualToString:kIDSEnterpriseRequiredActionThirdScan]) {
+        if ([self.lastDocumentScanResponse.requiredAction isEqualToString:kIDSEnterpriseRequiredActionSecondScan] ||
+            [self.lastDocumentScanResponse.requiredAction isEqualToString:kIDSEnterpriseRequiredActionThirdScan]) {
             self.lastDocumentScanResponse = nil;
         };
     }];
@@ -486,8 +486,56 @@ static NSString *const kPasswordKey = @"password";
     }];
 }
 
++ (void)load {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class class = [IDSEnterpriseSendRequest class];
+        
+        SEL originalSelector = @selector(generateRequestParameters:);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
+        SEL swizzledSelector = @selector(xxx_generateRequestParameters:);
+#pragma clang diagnostic pop
+        
+        Method originalMethod = class_getInstanceMethod(class, originalSelector);
+        Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+        
+        // When swizzling a class method, use the following:
+        // Class class = object_getClass((id)self);
+        // ...
+        // Method originalMethod = class_getClassMethod(class, originalSelector);
+        // Method swizzledMethod = class_getClassMethod(class, swizzledSelector);
+        
+        BOOL didAddMethod =
+        class_addMethod(class,
+                        originalSelector,
+                        method_getImplementation(swizzledMethod),
+                        method_getTypeEncoding(swizzledMethod));
+        
+        if (didAddMethod) {
+            class_replaceMethod(class,
+                                swizzledSelector,
+                                method_getImplementation(originalMethod),
+                                method_getTypeEncoding(originalMethod));
+        } else {
+            method_exchangeImplementations(originalMethod, swizzledMethod);
+        }
+    });
+}
+
 @end
 
+@implementation IDSEnterpriseSendRequest(SWIZZLE)
 
+- (void)xxx_generateRequestParameters:(void (^_Nonnull)(NSDictionary *_Nullable parameters, NSError *_Nullable error))completionHandler {
+    __block NSDictionary *originalParameters;
+    [self xxx_generateRequestParameters:^(NSDictionary *_Nullable parameters, NSError *_Nullable error){
+        originalParameters = parameters;
+    }];
+    NSMutableDictionary *mutatedParameters = [originalParameters mutableCopy];
+    mutatedParameters[@"PersonEntryId"] = nil;
+    mutatedParameters[@"IsDocumentExtracted"] = @(NO);
+    completionHandler(mutatedParameters, nil);
+}
 
-
+@end
