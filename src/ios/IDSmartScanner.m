@@ -205,8 +205,6 @@ static id DateStringOrNull( NSDate * _Nullable date) {
 @property (nonatomic, strong) IDSEnterpriseResponse *lastDocumentScanResponse;
 @property (nonatomic, strong) NSError               *lastDocumentScanResponseError;
 
-@property (nonatomic, strong) IDSEnterpriseDetailResponse *detailResponse;
-@property (nonatomic, strong) NSError                     *detailResponseError;
 /// scanning result
 @property (nonatomic, strong) NSDictionary *scanningResult;
 ///
@@ -245,8 +243,9 @@ static NSString *const kPasswordKey = @"password";
 
 #pragma mark - credentials error
 
-- (void) returnCredentialsError {
-    [self returnScanningResultWithError:YES];
+- (void)returnCredentialsError {
+    NSError *error = [NSError errorWithDomain:@"IDSmartScanner" code:0 userInfo:@{NSLocalizedDescriptionKey: @"Invalid credentials"}];
+    [self returnScanningResult:nil error:error];
 }
 
 #pragma mark - credentials setup
@@ -379,7 +378,7 @@ static NSString *const kPasswordKey = @"password";
         _scanningPhase = ScanningPhaseAddressDocument;
         [self openNativeCameraFront:NO];
     } else {
-        [self retrieveDetailResults:enterpriseResponse];
+        [self returnScanningResult:enterpriseResponse error:nil];
     }
 }
 
@@ -391,56 +390,20 @@ static NSString *const kPasswordKey = @"password";
     [controller addAction:closeAction];
     [self.viewController presentViewController:controller animated:YES completion:nil];
     
-    [self returnScanningResultWithError:YES];
+    [self returnScanningResult:nil error:error];
 }
 
-- (void)retrieveDetailResults:(IDSEnterpriseResponse *)enterpriseResponse {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Loading.." message:@"" preferredStyle:UIAlertControllerStyleAlert];
-    [self.viewController presentViewController:alertController animated:YES completion:^{
-        // Get journey results
-        [IDSEnterpriseService getDetails:enterpriseResponse.scanReference overrideUsername:self.username overridePassword:self.password overrideUrlPrefix:self.urlPrefix progress:nil
-                              completion:^(IDSEnterpriseDetailResponse * _Nullable detailResponse, NSError * _Nullable error) {
-                                  [alertController dismissViewControllerAnimated:YES completion:^{
-                                      if (error) {
-                                          [self handleDetailError:error];
-                                      } else {
-                                          [self handleDetailResponse:detailResponse];
-                                      }
-                                  }];
-                              }];
-    }];
-}
-
-- (void)handleDetailResponse: (IDSEnterpriseDetailResponse *)detailResponse {
-    _detailResponse = detailResponse;
-    [self returnScanningResultWithError:NO];
-}
-
-- (void)handleDetailError:(NSError *)error {
-    _detailResponseError = error;
-    
-    UIAlertController *controller = [UIAlertController alertControllerWithTitle:nil message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *closeAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action){
-        [self returnScanningResultWithError:NO];
-    }];
-    [controller addAction:closeAction];
-    [self.viewController presentViewController:controller animated:YES completion:nil];
-}
-
-
--(void)returnScanningResultWithError:(BOOL)isError {
+- (void)returnScanningResult:(IDSEnterpriseResponse *)response error:(NSError *)error {
     
     _scanningResult = @{
-                        @"credentialsHasBeenRetrieved": [[NSNumber alloc]initWithBool:_credentialsHasBeenRetrieved],
-                        @"enterpriseResult": ObjectOrNull([_lastDocumentScanResponse convertSelfToDictionary]),
-                        @"enterpriseError": ObjectOrNull([_lastDocumentScanResponseError convertSelfToDictionary]),
-                        @"detailResult": ObjectOrNull([_detailResponse convertSelfToDictionary]),
-                        @"detailError": ObjectOrNull([_detailResponseError convertSelfToDictionary])
+                        @"credentialsHasBeenRetrieved": @(self.credentialsHasBeenRetrieved),
+                        @"enterpriseResult": ObjectOrNull([response convertSelfToDictionary]),
+                        @"enterpriseError": ObjectOrNull([error convertSelfToDictionary])
                         };
     
     NSLog(@"%@", _scanningResult);
     
-    CDVCommandStatus status = (isError) ? CDVCommandStatus_ERROR : CDVCommandStatus_OK;
+    CDVCommandStatus status = error == nil ? CDVCommandStatus_OK : CDVCommandStatus_ERROR;
     CDVPluginResult*pluginResult = [CDVPluginResult resultWithStatus: status
                                                  messageAsDictionary:_scanningResult];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:_command.callbackId];
