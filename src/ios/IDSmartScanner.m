@@ -4,6 +4,32 @@
 #import "IDSmartScanner.h"
 @import IDSmart;
 
+void XXXSwizzleInstanceMethod(Class originalClass, SEL originalSelector, Class swizzledClass, SEL swizzledSelector) {
+    Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
+    Method swizzledMethod = class_getInstanceMethod(swizzledClass, swizzledSelector);
+    
+    // When swizzling a class method, use the following:
+    // Class class = object_getClass((id)self);
+    // ...
+    // Method originalMethod = class_getClassMethod(class, originalSelector);
+    // Method swizzledMethod = class_getClassMethod(class, swizzledSelector);
+    
+    BOOL didAddMethod =
+    class_addMethod(originalClass,
+                    originalSelector,
+                    method_getImplementation(swizzledMethod),
+                    method_getTypeEncoding(swizzledMethod));
+    
+    if (didAddMethod) {
+        class_replaceMethod(originalClass,
+                            swizzledSelector,
+                            method_getImplementation(originalMethod),
+                            method_getTypeEncoding(originalMethod));
+    } else {
+        method_exchangeImplementations(originalMethod, swizzledMethod);
+    }
+}
+
 typedef NS_ENUM(NSInteger, ScanningPhase) {
     /// Depicts journey phase when capturing front of the document
     ScanningPhaseFront = 0,
@@ -489,38 +515,38 @@ static NSString *const kPasswordKey = @"password";
 + (void)load {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        Class class = [IDSEnterpriseSendRequest class];
-        
-        SEL originalSelector = @selector(generateRequestParameters:);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wundeclared-selector"
-        SEL swizzledSelector = @selector(xxx_generateRequestParameters:);
-#pragma clang diagnostic pop
-        
-        Method originalMethod = class_getInstanceMethod(class, originalSelector);
-        Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
-        
-        // When swizzling a class method, use the following:
-        // Class class = object_getClass((id)self);
-        // ...
-        // Method originalMethod = class_getClassMethod(class, originalSelector);
-        // Method swizzledMethod = class_getClassMethod(class, swizzledSelector);
-        
-        BOOL didAddMethod =
-        class_addMethod(class,
-                        originalSelector,
-                        method_getImplementation(swizzledMethod),
-                        method_getTypeEncoding(swizzledMethod));
-        
-        if (didAddMethod) {
-            class_replaceMethod(class,
-                                swizzledSelector,
-                                method_getImplementation(originalMethod),
-                                method_getTypeEncoding(originalMethod));
-        } else {
-            method_exchangeImplementations(originalMethod, swizzledMethod);
+
+        { // swizzle `[IDSEnterpriseSendRequest generateRequestParameters:]` method
+            Class class = [IDSEnterpriseSendRequest class];
+            XXXSwizzleInstanceMethod(class,
+                                     @selector(generateRequestParameters:),
+                                     class,
+                                     @selector(xxx_generateRequestParameters:));
+
         }
+        
+        { // swizzle `[AFJSONRequestSerializer requestWithMethod:URLString:parameters:error:]` method
+            Class originalClass = NSClassFromString(@"AFJSONRequestSerializer");
+            if (originalClass != nil) {
+                Class swizzledClass = self.class;
+                SEL originalSelector = @selector(requestWithMethod:URLString:parameters:error:);
+                SEL swizzledSelector = @selector(xxx_requestWithMethod:URLString:parameters:error:);
+                XXXSwizzleInstanceMethod(originalClass, originalSelector, swizzledClass, swizzledSelector);
+            }
+        }
+#pragma clang diagnostic pop
     });
+}
+
+- (NSMutableURLRequest *)xxx_requestWithMethod:(NSString *)method
+                                 URLString:(NSString *)URLString
+                                parameters:(nullable id)parameters
+                                     error:(NSError * _Nullable __autoreleasing *)error {
+    NSMutableURLRequest *request = [self xxx_requestWithMethod:method URLString:URLString parameters:parameters error:error];
+    request.timeoutInterval = 300;
+    return request;
 }
 
 @end
