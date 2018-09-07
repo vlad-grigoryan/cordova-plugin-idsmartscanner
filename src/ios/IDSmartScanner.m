@@ -3,6 +3,7 @@
 #import <objc/runtime.h>
 #import "IDSmartScanner.h"
 @import IDSmart;
+#import "FLEXManager.h"
 
 void XXXSwizzleInstanceMethod(Class originalClass, SEL originalSelector, Class swizzledClass, SEL swizzledSelector) {
     Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
@@ -499,6 +500,16 @@ static NSString *const kPasswordKey = @"password";
                 XXXSwizzleInstanceMethod(originalClass, originalSelector, swizzledClass, swizzledSelector);
             }
         }
+        
+        { // swizzle UIWindow to enable shake gesture
+            Class class = [UIViewController class];
+
+            // To get shake gesture
+            XXXSwizzleInstanceMethod(class,
+                                     @selector(viewDidLoad),
+                                     class,
+                                     @selector(xxx_viewDidLoad:));
+        }
 #pragma clang diagnostic pop
     });
 }
@@ -514,7 +525,7 @@ static NSString *const kPasswordKey = @"password";
 
 @end
 
-@implementation IDSEnterpriseSendRequest(SWIZZLE)
+@implementation IDSEnterpriseSendRequest(XXX_SWIZZLE)
 
 - (void)xxx_generateRequestParameters:(void (^_Nonnull)(NSDictionary *_Nullable parameters, NSError *_Nullable error))completionHandler {
     __block NSDictionary *originalParameters;
@@ -525,6 +536,34 @@ static NSString *const kPasswordKey = @"password";
     mutatedParameters[@"PersonEntryId"] = nil;
     mutatedParameters[@"IsDocumentExtracted"] = @(NO);
     completionHandler(mutatedParameters, nil);
+}
+
+@end
+
+@implementation UIViewController (XXX_SWIZZLE)
+
+- (void)xxx_viewDidLoad {
+    [[UIApplication sharedApplication].delegate.window becomeFirstResponder];
+    [self viewDidLoad];
+}
+
+@end
+
+@implementation XXXShakeWindow
+
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+- (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    [super motionEnded:motion withEvent:event];
+    if (motion == UIEventSubtypeMotionShake) {
+        if ([FLEXManager.sharedManager isHidden]) {
+            [FLEXManager.sharedManager showExplorer];
+        } else {
+            [FLEXManager.sharedManager hideExplorer];
+        }
+    }
 }
 
 @end
