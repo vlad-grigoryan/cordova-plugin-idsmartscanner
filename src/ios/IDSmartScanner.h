@@ -7,7 +7,3 @@
 - (void)scan:(CDVInvokedUrlCommand*)command;
 
 @end
-
-@interface XXXShakeWindow : UIWindow
-
-@end

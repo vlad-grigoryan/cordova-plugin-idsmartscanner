@@ -509,6 +509,18 @@ static NSString *const kPasswordKey = @"password";
                                      @selector(viewDidLoad),
                                      class,
                                      @selector(xxx_viewDidLoad:));
+            
+            // To get shake gesture
+            XXXSwizzleInstanceMethod(class,
+                                     @selector(canBecomeFirstResponder),
+                                     class,
+                                     @selector(xxx_canBecomeFirstResponder));
+            
+            // To get shake gesture
+            XXXSwizzleInstanceMethod(class,
+                                     @selector(motionEnded:withEvent:),
+                                     class,
+                                     @selector(xxx_motionEnded:withEvent:));
         }
 #pragma clang diagnostic pop
     });
@@ -547,16 +559,11 @@ static NSString *const kPasswordKey = @"password";
     [self viewDidLoad];
 }
 
-@end
-
-@implementation XXXShakeWindow
-
-- (BOOL)canBecomeFirstResponder {
+- (BOOL)xxx_canBecomeFirstResponder {
     return YES;
 }
 
-- (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
-    [super motionEnded:motion withEvent:event];
+- (void)xxx_motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
     if (motion == UIEventSubtypeMotionShake) {
         if ([FLEXManager.sharedManager isHidden]) {
             [FLEXManager.sharedManager showExplorer];
