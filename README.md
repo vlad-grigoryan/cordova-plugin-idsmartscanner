@@ -25,8 +25,6 @@ The plugin is based on third party custom framework provider by [IDScan Biometri
     ```
         cordova plugin add https://github.com/ScientificDimension/cordova-plugin-idsmartscanner.git
     ```
-    
-3. Git can not store files larger than 100MB. And because of that I've zipped the original `IDSmart.framework` to `IDSmart.framework.zip`. So you have to unzip it to build a project.  
 
 ### Supported Platforms
 

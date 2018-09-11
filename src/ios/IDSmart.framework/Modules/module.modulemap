@@ -1,0 +1,8 @@
+framework module IDSmart {
+  umbrella header "IDSmart.h"
+  header "IDSBase.h"
+  header "IDSIDESOnline.h"
+  header "IDSMetadataObject.h"
+  export *
+  module * { export * }
+}
