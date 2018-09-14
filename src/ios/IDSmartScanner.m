@@ -5,6 +5,28 @@
 @import IDSmart;
 #import "FLEXManager.h"
 
+NSString * const IDSmartScannerScanCommandTypeArgument = @"type";
+
+NSString *IDSmartScannerSourceRawValue(IDSmartScannerSource source) {
+    switch (source) {
+            case IDSmartScannerSourceDocument:
+            return @"document";
+            break;
+            
+            case IDSmartScannerSourceSelfie:
+            return @"selfie";
+            break;
+    }
+}
+
+IDSmartScannerSource IDSmartScannerSourceFromRawValue(NSString *value) {
+    if ([value isEqualToString:IDSmartScannerSourceRawValue(IDSmartScannerSourceSelfie)]) {
+        return IDSmartScannerSourceSelfie;
+    } else {
+        return IDSmartScannerSourceDocument;
+    }
+}
+
 void XXXSwizzleInstanceMethod(Class originalClass, SEL originalSelector, Class swizzledClass, SEL swizzledSelector) {
     Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
     Method swizzledMethod = class_getInstanceMethod(swizzledClass, swizzledSelector);
@@ -235,7 +257,20 @@ static NSString *const kPasswordKey = @"password";
     BOOL success = [self trySetupCredentialsFrom:command.arguments[0]];
     
     if (success) {
-        [self openCamera];
+        id type = [command.arguments[0] valueForKey:IDSmartScannerScanCommandTypeArgument];
+        if ([type isKindOfClass:NSString.class]) {
+            IDSmartScannerSource source = IDSmartScannerSourceFromRawValue(type);
+            switch (source) {
+                    case IDSmartScannerSourceDocument:
+                    [self openDocumentScanerCamera];
+                    break;
+                    
+                    case IDSmartScannerSourceSelfie:
+                    self.scanningPhase = ScanningPhaseSelfie;
+                    [self openNativeCameraFront:YES];
+                    break;
+            }
+        }
     } else {
         [self returnCredentialsError];
     }
@@ -288,7 +323,7 @@ static NSString *const kPasswordKey = @"password";
     [self.viewController presentViewController:imagePicker animated:YES completion:nil];
 }
 
-- (void)openCamera {
+- (void)openDocumentScanerCamera {
     
     //    UIImage *img = [UIImage imageNamed:@"cameraOutput.png"];
     //    [self sendImage:img];
@@ -366,11 +401,11 @@ static NSString *const kPasswordKey = @"password";
     
     if ([action isEqualToString:kIDSEnterpriseRequiredActionSecondScan] ||
         [action isEqualToString:kIDSEnterpriseRequiredActionThirdScan]) {
-        [self openCamera];
+        [self openDocumentScanerCamera];
         [self displayCameraMessage:@"Please re-scan the document"];
     } else if ([action isEqualToString:kIDSEnterpriseRequiredActionScanBackside]) {
         _scanningPhase = ScanningPhaseBack;
-        [self openCamera];
+        [self openDocumentScanerCamera];
         [self displayCameraMessage:@"Please scan back side of the document"];
     } else if ([action isEqualToString:kIDSEnterpriseRequiredActionCaptureSelfie]) {
         _scanningPhase = ScanningPhaseSelfie;
@@ -503,7 +538,7 @@ static NSString *const kPasswordKey = @"password";
         
         { // swizzle UIWindow to enable shake gesture
             Class class = [UIViewController class];
-
+            
             // To get shake gesture
             XXXSwizzleInstanceMethod(class,
                                      @selector(viewDidLoad),
