@@ -6,6 +6,7 @@ typedef NS_ENUM(NSUInteger, IDSmartScannerSource) {
     IDSmartScannerSourceSelfie
 };
 
+extern NSString * const IDSmartScannerScanPersonEntryIdArgument;
 extern NSString * const IDSmartScannerScanCommandTypeArgument;
 
 extern NSString *IDSmartScannerSourceRawValue(IDSmartScannerSource source);

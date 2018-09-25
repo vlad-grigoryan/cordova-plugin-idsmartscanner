@@ -5,6 +5,7 @@
 @import IDSmart;
 #import "FLEXManager.h"
 
+NSString * const IDSmartScannerScanPersonEntryIdArgument = @"personEntryID";
 NSString * const IDSmartScannerScanCommandTypeArgument = @"type";
 
 NSString *IDSmartScannerSourceRawValue(IDSmartScannerSource source) {
@@ -218,6 +219,26 @@ static id DateStringOrNull( NSDate * _Nullable date) {
 @end
 ////////////////////////////////////////////////////////////////////////////
 
+static char IDSmartScannerEnterpriseSendRequestPersonEntryIDAssociatedObjectKey;
+
+@interface IDSEnterpriseSendRequest (PersonEntryID)
+
+@property (nonatomic, copy) NSString *personEntryID;
+
+@end
+
+@implementation IDSEnterpriseSendRequest (PersonEntryID)
+
+- (NSString *)personEntryID {
+    return objc_getAssociatedObject(self, &IDSmartScannerEnterpriseSendRequestPersonEntryIDAssociatedObjectKey);
+}
+
+- (void)setPersonEntryID:(NSString *)personEntryId {
+    objc_setAssociatedObject(self, &IDSmartScannerEnterpriseSendRequestPersonEntryIDAssociatedObjectKey, personEntryId, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+@end
+
 @interface IDSmartScanner() <IDSDocumentScannerControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 /// credentials
 @property (nonatomic, strong) NSString *urlPrefix;
@@ -233,6 +254,7 @@ static id DateStringOrNull( NSDate * _Nullable date) {
 ///
 @property (nonatomic, strong) IDSEnterpriseCredentials *credentials;
 @property (nonatomic, assign) ScanningPhase scanningPhase;
+@property (nonatomic, copy) NSString *initialPersonEntryId;
 
 /// store plugin command
 @property (nonatomic, strong) CDVInvokedUrlCommand *command;
@@ -257,6 +279,10 @@ static NSString *const kPasswordKey = @"password";
     BOOL success = [self trySetupCredentialsFrom:command.arguments[0]];
     
     if (success) {
+        // person entry id parameter
+        self.initialPersonEntryId = [command.arguments[0] valueForKey:IDSmartScannerScanPersonEntryIdArgument];
+        
+        // type parameter
         id type = [command.arguments[0] valueForKey:IDSmartScannerScanCommandTypeArgument];
         if ([type isKindOfClass:NSString.class]) {
             IDSmartScannerSource source = IDSmartScannerSourceFromRawValue(type);
@@ -377,6 +403,10 @@ static NSString *const kPasswordKey = @"password";
         // Set journeyID if we following the journey
         if (self.lastDocumentScanResponse) {
             [request setJourneyID:self.lastDocumentScanResponse.journeyID];
+        }
+        
+        if (self.initialPersonEntryId) {
+            request.personEntryID = self.initialPersonEntryId;
         }
         
     }  progress:nil
@@ -580,7 +610,7 @@ static NSString *const kPasswordKey = @"password";
         originalParameters = parameters;
     }];
     NSMutableDictionary *mutatedParameters = [originalParameters mutableCopy];
-    mutatedParameters[@"PersonEntryId"] = nil;
+    mutatedParameters[@"PersonEntryId"] = self.personEntryID;
     mutatedParameters[@"IsDocumentExtracted"] = @(NO);
     completionHandler(mutatedParameters, nil);
 }
