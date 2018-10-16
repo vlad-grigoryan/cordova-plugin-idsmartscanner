@@ -246,9 +246,6 @@ static char IDSmartScannerEnterpriseSendRequestPersonEntryIDAssociatedObjectKey;
 @property (nonatomic, strong) NSString *password;
 /// scanning response
 @property (nonatomic, assign) BOOL credentialsHasBeenRetrieved;
-@property (nonatomic, strong) IDSEnterpriseResponse *lastDocumentScanResponse;
-@property (nonatomic, strong) NSError               *lastDocumentScanResponseError;
-
 /// scanning result
 @property (nonatomic, strong) NSDictionary *scanningResult;
 ///
@@ -313,9 +310,6 @@ static NSString *const kPasswordKey = @"password";
 #pragma mark - credentials setup
 
 - (BOOL)trySetupCredentialsFrom:(NSDictionary *)credentials {
-    
-    NSLog(@"Credentials %@", credentials);
-    
     NSString* urlPrefix = credentials[kUrlPrefixKey];
     NSString* username = credentials[kUsernameKey];
     NSString* password = credentials[kPasswordKey];
@@ -400,11 +394,6 @@ static NSString *const kPasswordKey = @"password";
             [request setDocumentSource:IDSEnterpriseDocumentTypeUtility];
         }
         
-        // Set journeyID if we following the journey
-        if (self.lastDocumentScanResponse) {
-            [request setJourneyID:self.lastDocumentScanResponse.journeyID];
-        }
-        
         if (self.initialPersonEntryId) {
             request.personEntryID = self.initialPersonEntryId;
         }
@@ -421,36 +410,10 @@ static NSString *const kPasswordKey = @"password";
 }
 
 - (void)handleEnterpriseResponse: (IDSEnterpriseResponse *)enterpriseResponse {
-    _lastDocumentScanResponse = enterpriseResponse;
-    
-    /* Parse required action
-     // It's possible that required action would ask to perform additional actions for current step, example ADDRESSDOCUMENT:SECONDSCAN
-     */
-    NSArray *actions = [enterpriseResponse.requiredAction componentsSeparatedByString:@":"];
-    NSString *action = actions.firstObject;
-    
-    if ([action isEqualToString:kIDSEnterpriseRequiredActionSecondScan] ||
-        [action isEqualToString:kIDSEnterpriseRequiredActionThirdScan]) {
-        [self openDocumentScanerCamera];
-        [self displayCameraMessage:@"Please re-scan the document"];
-    } else if ([action isEqualToString:kIDSEnterpriseRequiredActionScanBackside]) {
-        _scanningPhase = ScanningPhaseBack;
-        [self openDocumentScanerCamera];
-        [self displayCameraMessage:@"Please scan back side of the document"];
-    } else if ([action isEqualToString:kIDSEnterpriseRequiredActionCaptureSelfie]) {
-        _scanningPhase = ScanningPhaseSelfie;
-        [self openNativeCameraFront:YES];
-    } else if ([action isEqualToString:kIDSEnterpriseRequiredActionAddressDocument]) {
-        _scanningPhase = ScanningPhaseAddressDocument;
-        [self openNativeCameraFront:NO];
-    } else {
-        [self returnScanningResult:enterpriseResponse error:nil];
-    }
+    [self returnScanningResult:enterpriseResponse error:nil];
 }
 
 - (void)handleEnterpriseError:(NSError *)error {
-    _lastDocumentScanResponseError = error;
-    
     UIAlertController *controller = [UIAlertController alertControllerWithTitle:nil message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *closeAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
     [controller addAction:closeAction];
@@ -513,12 +476,7 @@ static NSString *const kPasswordKey = @"password";
 }
 
 - (void)documentScannerControllerDidCancel:(IDSDocumentScannerController *)scanner {
-    [scanner dismissViewControllerAnimated:YES completion:^{
-        if ([self.lastDocumentScanResponse.requiredAction isEqualToString:kIDSEnterpriseRequiredActionSecondScan] ||
-            [self.lastDocumentScanResponse.requiredAction isEqualToString:kIDSEnterpriseRequiredActionThirdScan]) {
-            self.lastDocumentScanResponse = nil;
-        };
-    }];
+    [scanner dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)documentScannerController:(IDSDocumentScannerController *)scanner didFinishScanningWithInfo:(NSDictionary *)info {
