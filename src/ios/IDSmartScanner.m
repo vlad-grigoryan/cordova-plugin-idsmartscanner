@@ -3,7 +3,6 @@
 #import <objc/runtime.h>
 #import "IDSmartScanner.h"
 @import IDSmart;
-#import "FLEXManager.h"
 
 NSString * const IDSmartScannerScanPersonEntryIdArgument = @"personEntryID";
 NSString * const IDSmartScannerScanCommandTypeArgument = @"type";
@@ -13,7 +12,7 @@ NSString *IDSmartScannerSourceRawValue(IDSmartScannerSource source) {
             case IDSmartScannerSourceDocument:
             return @"document";
             break;
-            
+        
             case IDSmartScannerSourceSelfie:
             return @"selfie";
             break;
@@ -28,7 +27,7 @@ IDSmartScannerSource IDSmartScannerSourceFromRawValue(NSString *value) {
     }
 }
 
-void XXXSwizzleInstanceMethod(Class originalClass, SEL originalSelector, Class swizzledClass, SEL swizzledSelector) {
+static void XXXSwizzleInstanceMethod(Class originalClass, SEL originalSelector, Class swizzledClass, SEL swizzledSelector) {
     Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
     Method swizzledMethod = class_getInstanceMethod(swizzledClass, swizzledSelector);
     
@@ -287,7 +286,7 @@ static NSString *const kPasswordKey = @"password";
                     case IDSmartScannerSourceDocument:
                     [self openDocumentScanerCamera];
                     break;
-                    
+                
                     case IDSmartScannerSourceSelfie:
                     self.scanningPhase = ScanningPhaseSelfie;
                     [self openNativeCameraFront:YES];
@@ -523,28 +522,7 @@ static NSString *const kPasswordKey = @"password";
                 XXXSwizzleInstanceMethod(originalClass, originalSelector, swizzledClass, swizzledSelector);
             }
         }
-        
-        { // swizzle UIWindow to enable shake gesture
-            Class class = [UIViewController class];
-            
-            // To get shake gesture
-            XXXSwizzleInstanceMethod(class,
-                                     @selector(viewDidLoad),
-                                     class,
-                                     @selector(xxx_viewDidLoad:));
-            
-            // To get shake gesture
-            XXXSwizzleInstanceMethod(class,
-                                     @selector(canBecomeFirstResponder),
-                                     class,
-                                     @selector(xxx_canBecomeFirstResponder));
-            
-            // To get shake gesture
-            XXXSwizzleInstanceMethod(class,
-                                     @selector(motionEnded:withEvent:),
-                                     class,
-                                     @selector(xxx_motionEnded:withEvent:));
-        }
+
 #pragma clang diagnostic pop
     });
 }
@@ -571,29 +549,6 @@ static NSString *const kPasswordKey = @"password";
     mutatedParameters[@"PersonEntryId"] = self.personEntryID;
     mutatedParameters[@"IsDocumentExtracted"] = @(NO);
     completionHandler(mutatedParameters, nil);
-}
-
-@end
-
-@implementation UIViewController (XXX_SWIZZLE)
-
-- (void)xxx_viewDidLoad {
-    [[UIApplication sharedApplication].delegate.window becomeFirstResponder];
-    [self viewDidLoad];
-}
-
-- (BOOL)xxx_canBecomeFirstResponder {
-    return YES;
-}
-
-- (void)xxx_motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
-    if (motion == UIEventSubtypeMotionShake) {
-        if ([FLEXManager.sharedManager isHidden]) {
-            [FLEXManager.sharedManager showExplorer];
-        } else {
-            [FLEXManager.sharedManager hideExplorer];
-        }
-    }
 }
 
 @end
