@@ -269,7 +269,7 @@ static NSString *const kPasswordKey = @"password";
     _command = command;
     
     if (command.arguments.count < 1) {
-        [self returnCredentialsError];
+        [self returnCredentialsErrorWithLocalizedDescription:@"Invalid credentials"];
     }
     
     BOOL success = [self trySetupCredentialsFrom:command.arguments[0]];
@@ -294,15 +294,16 @@ static NSString *const kPasswordKey = @"password";
             }
         }
     } else {
-        [self returnCredentialsError];
+        NSString *localizedDescription = [NSString stringWithFormat:@"Could not setup credentials from provided arguments %@", [command.arguments[0] description]];
+        [self returnCredentialsErrorWithLocalizedDescription:localizedDescription];
     }
     
 }
 
 #pragma mark - credentials error
 
-- (void)returnCredentialsError {
-    NSError *error = [NSError errorWithDomain:@"IDSmartScanner" code:0 userInfo:@{NSLocalizedDescriptionKey: @"Invalid credentials"}];
+- (void)returnCredentialsErrorWithLocalizedDescription:(NSString *)localizedDescription {
+    NSError *error = [NSError errorWithDomain:@"IDSmartScanner" code:0 userInfo:@{NSLocalizedDescriptionKey: localizedDescription}];
     [self returnScanningResult:nil error:error];
 }
 
